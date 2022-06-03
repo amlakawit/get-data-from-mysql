@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e94fbf8b-21cc-4ddc-a6df-0e42d4f569a7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9c371154-dc7f-443b-bd15-40f176bda271" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="nateyMahder@2022" database="w3schools" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="46e66c87-0d72-4f59-bbb7-474ba3437a88" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="nateyMahder@2022" database="w3schools" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="a7b173bf-f206-4e37-92e3-f7a7745cc5fb" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="nateyMahder@2022" database="w3schools" />
+	</db:config>
+	<db:config name="Database_Config3" doc:name="Database Config" doc:id="d662f31f-e440-4f1e-8249-d0cfe0f19f64" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="nateyMahder@2022" database="w3schools" />
+	</db:config>
+	<flow name="get-data" doc:id="0fe52c5f-fb92-491d-90b5-e9eada0e77b3" >
+		<http:listener doc:name="/GET" doc:id="2ecaaa05-29d9-409f-8304-975cdf44c09b" allowedMethods="GET" config-ref="HTTP_Listener_config" path="/employees"/>
+		<db:select doc:name="Get all employees " doc:id="d54249bb-42f9-4c8b-ab03-506402191f2a" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM employees ]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="to CSV" doc:id="b0f69d3b-bc65-44a9-9cad-0cbeeeba8b8c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv 
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="get-data-use-query-param" doc:id="337bd907-7f68-4c19-bf72-a207d4190739" >
+		<http:listener doc:name="/GET" doc:id="f1800944-aab4-4d3d-a8b7-a38dcc9bf8ad" config-ref="HTTP_Listener_config" path="/employeeByQueryParam" allowedMethods="GET"/>
+		<set-variable value="#[attributes.queryParams.id]" doc:name="ID" doc:id="4220072a-c8b2-4420-8d42-2bbe77381488" variableName="id"/>
+		<db:select doc:name="Select" doc:id="caa4349a-89cb-4613-ab90-f6cac3381887" config-ref="Database_Config1">
+			<db:sql ><![CDATA[select * from employees where employeeId = :employeeId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{"employeeId": vars.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="to JSON" doc:id="2f96eef0-5717-4101-9509-f4339ebb5fbc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="get-data-from-mysqlFlow" doc:id="72d98ab3-836e-4743-8f0b-f8175a09b469" >
+		<http:listener doc:name="/GET" doc:id="a33841bc-5907-4c9f-a6ab-1e5171e4430f" config-ref="HTTP_Listener_config" path="/employeeByIdUriParam/{id}" allowedMethods="GET"/>
+		<set-variable value="#[attributes.uriParams.id]" doc:name="ID" doc:id="1dac5e15-a2f8-4af3-b1b5-2e2270c8282a" variableName="id"/>
+		<db:select doc:name="Select" doc:id="305161c2-3de2-4a51-ab64-05a874c03a81" config-ref="Database_Config3">
+			<db:sql ><![CDATA[select * from employees where employeeId = :employeeId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{"employeeId": vars.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="to JSON" doc:id="d1d93ab0-b728-4cfa-8ae2-0189853faed0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="get-data-from-mysqlFlow1" doc:id="fcec2704-9e7a-40eb-a3cd-d4c9faf09613" >
+		<http:listener doc:name="/GET" doc:id="30bc421c-bfe6-4979-94a9-3bda5beffab0" config-ref="HTTP_Listener_config" path="/empleoyeeByIdHeader" allowedMethods="GET"/>
+		<set-variable value="#[attributes.headers.id]" doc:name="ID" doc:id="a03b7567-a7ff-41bc-af3d-758e517e84dd" variableName="id"/>
+		<db:select doc:name="Select" doc:id="540c7bf7-2bbf-41f0-acb2-77bf356510b7" config-ref="Database_Config2">
+			<db:sql ><![CDATA[select * from employees where employeeId = :employeeId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{"employeeId": vars.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="to JSON" doc:id="7e822c02-8a16-4274-8ebd-b4bcff4c97e3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
